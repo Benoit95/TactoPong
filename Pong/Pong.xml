@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" standalone="yes"?>
+<!--================================================================-->
+<!-- DESCRIPTION : Changement du Corps Perçu (Body)                 -->
+<!-- 			   intégré dans le zip				                -->
+<!-- ----------------------------------------------------------------->
+<!--	Date : 04/2016										-->
+<!--	Auteur : Villain Benoit									-->
+<!--================================================================-->
+<response>
+	<room>
+		<name>Pong</name>
+		<width>1024</width>
+		<height>768</height>
+		<scriptLUA>Pong.lua</scriptLUA>
+	</room>
+
+	<actions>
+	</actions>
+	
+	<objects>
+		<!-- Fond 
+		<object>
+		  <width>1024</width>
+		  <height>768</height>
+		  <top>0</top>
+		  <left>0</left>
+		  <object_type>image</object_type>
+		  <value>fond_intertact_min.png</value>
+		  <event>OnOpen</event>
+		</object>
+		
+		<object>
+		  <width>1024</width>
+		  <height>768</height>
+		  <top>0</top>
+		  <left>0</left>
+		  <object_type>image</object_type>
+		  <value>fond_intertact_min.png</value>
+		  <event>OnOpen</event>
+		</object>
+		
+		-->
+	</objects>	
+	
+</response>
