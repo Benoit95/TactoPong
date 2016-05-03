@@ -16,8 +16,8 @@ onInit = function(n, ...)
     ball_x = (screen_width / 2) - (ball_width / 2)
     ball_y = (screen_height / 2) - (ball_height / 2)
 	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
-	angle_limit = 0.9 -- limite verticale pour l'angle (1 : pas de limite / 0.5 : très limité)
-	coeff_v = 10 -- coef vitesse de la balle
+	angle_limit = 0.5 -- limite verticale pour l'angle (1 : pas de limite / 0.1 : très limité)
+	coeff_v = 8 -- coef vitesse de la balle
 	
 	-- Raquette 1
     paddle_1_width = 30
@@ -52,6 +52,7 @@ onInit = function(n, ...)
 	-- Coordonées du picot à lever
 	p = 0
 	r = 0
+	changeStim = true
 	
 	-- score
 	score_j1 = 0
@@ -62,7 +63,9 @@ onInit = function(n, ...)
 	
 	tactos_Redraw()
 	
-	return 500 	-- Timer
+	tactos_SetTimerValue(20)
+	
+	return 20 	-- Timer
 end
 
 onTimer = function ()
@@ -71,7 +74,6 @@ onTimer = function ()
 end
 
 onKey = function (cmd, ch)
-
 	if cmd == 0x0102 then
 		if ch == 32 then	-- SPACE (lance la balle)
 			lance_balle = true
@@ -88,7 +90,7 @@ end
 function update_state()
 -- update de la raquette
 	x,y = tactos_GetTactosPos()
-	paddle_1_y = y - (paddle_1_height / 2)
+	paddle_1_y = x - (paddle_1_height / 2)
 	if paddle_1_y <= 0 then -- haut de l'écran
 		paddle_1_y = 0
 	elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
@@ -102,11 +104,13 @@ function update_state()
 	end
 
 -- update des infos sur la localisation de la balle
+	local old_p, old_r = p, r
 	p = math.ceil(ball_x / (screen_width / 4))
 	r = math.ceil((ball_y - paddle_1_y + ball_height) / ((ball_height + paddle_1_height) / 4))
 	if r < 0 or r > 4 then 
 		r = 0 
 	end
+	changeStim = (old_p ~= p) or (old_r ~= r)
 	
 -- rebonds de la balle
 	--rebond haut
@@ -128,7 +132,7 @@ function update_state()
 	end
 	
 	--rebond sur la raquette
-	rebond_raquette_2()
+	rebond_raquette_1()
 	
 -- Sortie de la balle 
     if ball_x < 0 then
@@ -144,7 +148,7 @@ function rebond_raquette_1()
 		H = paddle_1_height + ball_height
 		Z = angle_limit*math.pi/2
 		
-		ball_angle = ((Y * (-angle_limit*math.pi)/H) + Z) % (2 * math.pi)
+		ball_angle = (((Y/H) * (-angle_limit*math.pi)) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
 	end	
@@ -169,6 +173,25 @@ function init_ball_pos()
 	ball_angle = math.pi
 end
 
+function getStimString()
+	local str = ""
+	if (p == 0) or (r == 0) then
+		str = "0000000000000000"
+	else
+		local zeros_before = 4*(4-p)+(r-1)
+		local zeros_after = 15-zeros_before
+		for i=1, zeros_before do
+			str = str.."0"
+		end
+		str = str.."1"
+		for j=1, zeros_after do
+			str = str.."0"
+		end
+	end
+	tactos_Debug(str)
+	return str
+end
+
 function draw()
 -- affichage score
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
@@ -187,13 +210,13 @@ function draw()
 -- test
 	tactos_ModifyObject("TEXT",12, "p : " .. p)
 	tactos_ModifyObject("TEXT",13, "r : " .. r)
+	
+-- picots
+	if (changeStim == true) then
+		tactos_SetStim(3, getStimString())
+		changeStim = false
+	end
 end
-
-
-
-
-
-
 
 
 
