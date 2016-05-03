@@ -13,19 +13,17 @@ onInit = function(n, ...)
 	-- ball
     ball_width = 32
     ball_height = 32
-    ball_x = 32--(screen_width / 2) - (ball_width / 2)
+    ball_x = (screen_width / 2) - (ball_width / 2)
     ball_y = (screen_height / 2) - (ball_height / 2)
-    ball_speed_x = -(screen_width/6)
-    ball_speed_y = (screen_width/6)
-	
-	coeff_v = 0.1 -- coeff vitesse par défaut (ne pas dépasser 0.1)
+	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
+	angle_limit = 0.9 -- limite verticale pour l'angle (1 : pas de limite / 0.5 : très limité)
+	coeff_v = 10 -- coef vitesse de la balle
 	
 	-- Raquette 1
     paddle_1_width = 30
     paddle_1_height = 134
     paddle_1_x = 0
     paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
-    paddle_1_speed = ball_speed_y * 2
 
 	-- Mur
     mur_1_width = 30
@@ -51,19 +49,7 @@ onInit = function(n, ...)
 	
 	-- Remarque sur les images, la taille des images affichés depend des images elles meme... nul
 	
-	-- Position pour les picots...
-	p0 = 0
-	p1 = screen_width/4
-	p2 = screen_width/2
-	p3 = screen_width*(3/4)
-	p4 = screen_width
-	
-	r0 = paddle_1_y
-	r1 = paddle_1_y + paddle_1_height/4
-	r2 = paddle_1_y + paddle_1_height/2
-	r3 = paddle_1_y + paddle_1_height*(3/4)
-	r4 = paddle_1_y + paddle_1_height
-	
+	-- Coordonées du picot à lever
 	p = 0
 	r = 0
 	
@@ -103,7 +89,6 @@ function update_state()
 -- update de la raquette
 	x,y = tactos_GetTactosPos()
 	paddle_1_y = y - (paddle_1_height / 2)
-	
 	if paddle_1_y <= 0 then -- haut de l'écran
 		paddle_1_y = 0
 	elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
@@ -112,8 +97,8 @@ function update_state()
 	
 -- update de la balle
 	if lance_balle == true then
-		ball_x = ball_x + (ball_speed_x * coeff_v)
-		ball_y = ball_y + (ball_speed_y * coeff_v)
+		ball_x = ball_x + (math.cos(ball_angle) * coeff_v)
+		ball_y = ball_y - (math.sin(ball_angle) * coeff_v)
 	end
 
 -- update des infos sur la localisation de la balle
@@ -124,33 +109,64 @@ function update_state()
 	end
 	
 -- rebonds de la balle
-	--rebond haut et bas
-	if ball_y <= 0 or (ball_y + ball_height) >= screen_height then
-		ball_speed_y = -1 * ball_speed_y
+	--rebond haut
+	if ball_y <= 0 then
+		ball_angle = (-1 * ball_angle) % (2 * math.pi)
+		ball_y = 0
 	end
-
-	-- rebond sur la raquette
-	if ball_x <= (paddle_1_x + paddle_1_width) and r ~= 0 then
-		ball_speed_x = -1 * ball_speed_x
-		ball_x = (paddle_1_x + paddle_1_width)
-		score_j1 = score_j1 + 1
+	
+	--rebond bas
+	if (ball_y + ball_height) >= screen_height then
+		ball_angle = (-1 * ball_angle) % (2 * math.pi)
+		ball_y = screen_height - ball_height
 	end
-
+	
 	-- rebond sur le mur
 	if (ball_x + ball_width) >= (screen_width - mur_1_width) then
-		ball_speed_x = -1 * ball_speed_x
+		ball_angle = (math.pi - ball_angle) % (2 * math.pi)
+		ball_x = screen_width - mur_1_width - ball_width
 	end
+	
+	--rebond sur la raquette
+	rebond_raquette_2()
 	
 -- Sortie de la balle 
     if ball_x < 0 then
 		lance_balle = false
-		
-		-- Replacement de la balle au centre
-		ball_x = (screen_width / 2) - (ball_width / 2)
-		ball_y = (screen_height / 2) - (ball_height / 2)
-		ball_speed_x = -(screen_width/6)
-		ball_speed_y = (screen_width/6)		
+		init_ball_pos()
     end
+end
+
+-- pas de prise en compte de l'angle d'arrivée
+function rebond_raquette_1()
+	if ball_x <= (paddle_1_x + paddle_1_width) and r ~= 0 then
+		Y = ball_y - paddle_1_y + ball_height
+		H = paddle_1_height + ball_height
+		Z = angle_limit*math.pi/2
+		
+		ball_angle = ((Y * (-angle_limit*math.pi)/H) + Z) % (2 * math.pi)
+		ball_x = (paddle_1_x + paddle_1_width + 1)
+		score_j1 = score_j1 + 1
+	end	
+end
+
+-- prise en compte de l'angle d'arrivée
+function rebond_raquette_2()
+	if ball_x <= (paddle_1_x + paddle_1_width) and r ~= 0 then
+		Y = ball_y - paddle_1_y + ball_height
+		H = paddle_1_height + ball_height
+		Z = ((2 + angle_limit)*math.pi - 2*ball_angle) / 4
+		
+		ball_angle = (((Y/H) * (-angle_limit*math.pi)/2) + Z) % (2 * math.pi)
+		ball_x = (paddle_1_x + paddle_1_width + 1)
+		score_j1 = score_j1 + 1
+	end	
+end
+
+function init_ball_pos()
+	ball_x = (screen_width / 2) - (ball_width / 2)
+    ball_y = (screen_height / 2) - (ball_height / 2)
+	ball_angle = math.pi
 end
 
 function draw()
@@ -183,7 +199,6 @@ end
 
 
 -- TEST NON CONCLUANT ...
-
 
 --[[
 onKey = function (cmd, ch)
