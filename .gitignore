@@ -24,6 +24,9 @@ $RECYCLE.BIN/
 # OSX
 # =========================
 
+#NPM modules 
+./node_modules/**/*
+
 .DS_Store
 .AppleDouble
 .LSOverride

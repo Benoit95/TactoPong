@@ -1,0 +1,16 @@
+{
+  "name": "TacTos",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "zip-local": "^0.3.3" ,
+    "gulp" : "*" ,
+    "gulp-watch" : "*"
+  }
+}
