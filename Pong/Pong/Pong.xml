@@ -6,6 +6,7 @@
 <!--	Date : 04/2016										-->
 <!--	Auteur : Villain Benoit									-->
 <!--================================================================-->
+
 <response>
 	<room>
 		<name>Pong</name>
@@ -15,9 +16,7 @@
 	</room>
 
 	<actions>
-
 	</actions>
-
 	
 	<objects>
 		<!-- Fond 
