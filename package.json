@@ -9,8 +9,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "zip-local": "^0.3.3" ,
-    "gulp" : "*" ,
-    "gulp-watch" : "*"
+    "gulp": "*",
+    "gulp-watch": "*",
+    "zip-dir": "^1.0.2",
+    "zip-local": "^0.3.3"
   }
 }

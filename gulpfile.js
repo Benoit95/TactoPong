@@ -6,7 +6,7 @@ gulp.task("watch" , function() {
 
     return gulp.src("./Pong/**/*")
             .pipe(watch("./Pong/**/*" , function(){
-              zip.sync.zip("./Pong/").compress().save("Pong.zip");
+              zip.sync.zip("./Pong").compress().save("Pong.zip");
             })) ;
 
 })
