@@ -24,8 +24,11 @@ $RECYCLE.BIN/
 # OSX
 # =========================
 
-#NPM modules 
+# NPM modules 
 node_modules
+
+# Ignore the Zip
+Pong.zip
 
 .DS_Store
 .AppleDouble
