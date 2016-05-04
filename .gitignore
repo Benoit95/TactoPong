@@ -25,7 +25,7 @@ $RECYCLE.BIN/
 # =========================
 
 #NPM modules 
-./node_modules/**/*
+node_modules
 
 .DS_Store
 .AppleDouble
