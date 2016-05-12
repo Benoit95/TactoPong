@@ -1,15 +1,20 @@
- 
+-- options globales 
+
+-- jouer les sons
+play_sound = true
+
+-- utiliser la largeur réelle de la balle pour lever les picots (si false, pas plus d'1 seul picot levé en même temps)
+-- si ce paramètre vaut true, le nombre de picots levés simultanéments dépend de la largeur de la balle
+use_ball_width = true
+
+-- type de rebonds sur raquette (1 = pas prise en compte angle d'arrivée / 2 = prise en compte angle d'arrivée)
+type_rebond = 1
+
 onInit = function(n, ...)
 	-- Ecran
     screen_width = 1024
     screen_height = 768
 
-	-- Creation des 4 sections pour les picots... (pas utilisés )
-	tactos_AddObject("AREA", 20, 0, 123, screen_width/4, screen_height, "none", "")
-	tactos_AddObject("AREA", 21, screen_width/4, 0, screen_width/4, screen_height, "none", "")
-	tactos_AddObject("AREA", 22, screen_width/2, 0, screen_width/4, screen_height, "none", "")
-	tactos_AddObject("AREA", 23, screen_width*(3/4), 0, screen_width/4, screen_height, "none", "")
-	
 	-- ball
     ball_width = 32
     ball_height = 32
@@ -43,16 +48,16 @@ onInit = function(n, ...)
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
 	
-	-- test
-	tactos_AddObject("TEXT", 12, 10, 10, 200, 25, "none", "CONFIG:20:black,T:navy: ")
-	tactos_AddObject("TEXT", 13, 10, 35, 200, 25, "none", "CONFIG:20:black,T:navy: ")
-	
-	-- Remarque sur les images, la taille des images affichés depend des images elles meme... nul
-	
 	-- Coordonées du picot à lever
-	p = 0
-	r = 0
+	m_picots = {} -- création de la matrice de picots
+	for i = 1, 4 do
+		m_picots[i] = {} -- création d'un nouveau rang
+		for j = 1, 4 do
+			m_picots[i][j] = 0 -- initialisation
+		end
+	end
 	changeStim = true
+	en_face = false
 	
 	-- score
 	score_j1 = 0
@@ -88,29 +93,27 @@ end
  
 
 function update_state()
--- update de la raquette
+-- update de la position de la raquette
 	x,y = tactos_GetTactosPos()
-	paddle_1_y = x - (paddle_1_height / 2)
+	paddle_1_y = y - (paddle_1_height / 2)
 	if paddle_1_y <= 0 then -- haut de l'écran
 		paddle_1_y = 0
 	elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
 		paddle_1_y = screen_height - paddle_1_height
 	end
 	
--- update de la balle
+-- update de la position de la balle
 	if lance_balle == true then
 		ball_x = ball_x + (math.cos(ball_angle) * coeff_v)
 		ball_y = ball_y - (math.sin(ball_angle) * coeff_v)
 	end
 	
--- update des infos sur la localisation de la balle
-	local old_p, old_r = p, r
-	p = math.ceil(ball_x / (screen_width / 4))
-	r = math.ceil((ball_y - paddle_1_y + ball_height) / ((ball_height + paddle_1_height) / 4))
-	if r < 0 or r > 4 then 
-		r = 0 
+-- update du tableau des picots
+	if use_ball_width == true then
+		update_picots_width()
+	else
+		update_picots_no_width()
 	end
-	changeStim = (old_p ~= p) or (old_r ~= r)
 	
 -- rebonds de la balle
 	--rebond haut
@@ -132,7 +135,11 @@ function update_state()
 	end
 	
 	--rebond sur la raquette
-	rebond_raquette_1()
+	if type_rebond == 1 then
+		rebond_raquette_1()
+	else
+		rebond_raquette_2()
+	end
 	
 -- Sortie de la balle 
     if ball_x < 0 then
@@ -141,9 +148,50 @@ function update_state()
     end
 end
 
+function update_picots_width()
+	local ligne = math.ceil(ball_x / (screen_width / 4)) -- la ligne à modifier (=profondeur de la balle)
+	en_face = false
+	for i = 1, 4 do
+		for j = 1, 4 do
+			haut_case = paddle_1_y + (j-1)*paddle_1_height/4
+			bas_case = paddle_1_y + j*paddle_1_height/4
+			old_picot = m_picots[i][j]
+			if (5-i) == ligne and ball_y+ball_height > haut_case and ball_y < bas_case then
+				m_picots[i][j] = 1
+				en_face = true
+			else
+				m_picots[i][j] = 0
+			end
+			if old_picot ~= m_picots[i][j] then
+				changeStim = true
+			end
+		end
+	end
+end
+
+function update_picots_no_width()
+	local ligne = math.ceil(ball_x / (screen_width / 4)) -- la ligne à modifier (=profondeur de la balle)
+	local r = math.ceil((ball_y - paddle_1_y + ball_height) / ((ball_height + paddle_1_height) / 4)) -- colonne à modifier (=position balle par rapport à la raquette)
+	if r < 0 or r > 4 then r = 0 end
+	en_face = (r ~= 0)
+	for i = 1, 4 do
+		for j = 1, 4 do
+			old_picot = m_picots[i][j]
+			if (5-i) == ligne and j == r then
+				m_picots[i][j] = 1
+			else
+				m_picots[i][j] = 0
+			end
+			if old_picot ~= m_picots[i][j] then
+				changeStim = true
+			end
+		end
+	end
+end
+
 -- pas de prise en compte de l'angle d'arrivée
 function rebond_raquette_1()
-	if ball_x <= (paddle_1_x + paddle_1_width) and r ~= 0 then
+	if ball_x <= (paddle_1_x + paddle_1_width) and en_face == true then
 		Y = ball_y - paddle_1_y + ball_height
 		H = paddle_1_height + ball_height
 		Z = angle_limit*math.pi/2
@@ -156,7 +204,7 @@ end
 
 -- prise en compte de l'angle d'arrivée
 function rebond_raquette_2()
-	if ball_x <= (paddle_1_x + paddle_1_width) and r ~= 0 then
+	if ball_x <= (paddle_1_x + paddle_1_width) and en_face == true then
 		Y = ball_y - paddle_1_y + ball_height
 		H = paddle_1_height + ball_height
 		Z = ((2 + angle_limit)*math.pi - 2*ball_angle) / 4
@@ -175,17 +223,9 @@ end
  
 function getStimString()
 	local str = ""
-	if (p == 0) or (r == 0) then
-		str = "0000000000000000"
-	else
-		local zeros_before = 4*(4-p)+(r-1)
-		local zeros_after = 15-zeros_before
-		for i=1, zeros_before do
-			str = str.."0"
-		end
-		str = str.."1"
-		for j=1, zeros_after do
-			str = str.."0"
+	for i = 1, 4 do
+		for j = 1, 4 do
+			str = str .. m_picots[i][j]
 		end
 	end
 	tactos_Debug(str)
@@ -207,10 +247,6 @@ function draw()
 -- affichage balle	
 	tactos_SetPosObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height)
 	
--- test
-	tactos_ModifyObject("TEXT",12, "p : " .. p)
-	tactos_ModifyObject("TEXT",13, "r : " .. r)
-	
 -- picots
 	if (changeStim == true) then
 		tactos_SetStim(3, getStimString())
@@ -218,34 +254,3 @@ function draw()
 	end
 end
 
-
-
-
--- TEST NON CONCLUANT ...
-
---[[
-onKey = function (cmd, ch)
-
-	-- Appuie sur une touche du clavier
-	if cmd == 0x0102 then
-		if ch == 122 then	-- Z (haut)
-			paddle_1_y = paddle_1_y - (paddle_1_speed * 0.1)
-		elseif ch == 115 then	-- S (bas)
-			paddle_1_y = paddle_1_y + (paddle_1_speed * 0.1)
-		elseif ch == 112 then -- p (pause?)
-
-		end
-		
-		-- Le J1 ne peut pas sortir de l'ecran
-		if paddle_1_y <= 0 then -- haut de l'écran
-			paddle_1_y = 0
-		elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
-			paddle_1_y = screen_height - paddle_1_height
-		end
-		
-		-- Mise à jour de la raquette 1
-		tactos_SetPosObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height)
-		--tactos_Redraw(0, screen_height, paddle_1_y, screen_height)		
-	end
-end
-]]--
