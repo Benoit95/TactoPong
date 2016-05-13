@@ -10,41 +10,72 @@ use_ball_width = true
 -- type de rebonds sur raquette (1 = pas prise en compte angle d'arrivée / 2 = prise en compte angle d'arrivée)
 type_rebond = 1
 
+-- Taille de la balle (1 2 ou 3 du plus petit au plus grand)	-- Normal : 1
+taille_balle = 1
+
+-- Taille de la raquette (1 2 ou 3 du plus petit au plus grand)	-- Normal : 1
+taille_raquette = 1
+
 onInit = function(n, ...)
 	-- Ecran
     screen_width = 1024
     screen_height = 768
 
 	-- ball
-    ball_width = 32
-    ball_height = 32
-    ball_x = (screen_width / 2) - (ball_width / 2)
-    ball_y = (screen_height / 2) - (ball_height / 2)
+	if taille_balle == 1 then
+		ball_width = 32
+		ball_height = 32
+		ball_x = (screen_width / 2) - (ball_width / 2)
+		ball_y = (screen_height / 2) - (ball_height / 2)
+		tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle.bmp")
+		
+	elseif taille_balle == 2 then
+		ball_width = 48
+		ball_height = 48
+		ball_x = (screen_width / 2) - (ball_width / 2)
+		ball_y = (screen_height / 2) - (ball_height / 2)
+		tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle2.bmp")
+	else
+		ball_width = 64
+		ball_height = 64
+		ball_x = (screen_width / 2) - (ball_width / 2)
+		ball_y = (screen_height / 2) - (ball_height / 2)
+		tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle3.bmp")
+	end
+	
 	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
 	angle_limit = 0.3 -- limite verticale pour l'angle (1 : pas de limite / 0.1 : très limité)
 	coeff_v = 12 -- coef vitesse de la balle
+
 	
 	-- Raquette 1
-    paddle_1_width = 30
-    paddle_1_height = 134
-    paddle_1_x = 0
-    paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
-
+	paddle_1_width = 30
+	paddle_1_x = 0
+	if taille_raquette == 1 then
+		paddle_1_height = 128
+		paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
+		tactos_AddObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height, "none", "Raquette.png")
+	elseif taille_raquette == 2 then
+		paddle_1_height = 192
+		paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
+		tactos_AddObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height, "none", "Raquette1_2.png")
+	else
+		paddle_1_height = 256
+		paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
+		tactos_AddObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height, "none", "Raquette1_3.png")
+	end
+	
 	-- Mur
     mur_1_width = 30
     mur_1_height = screen_height
     mur_1_x = screen_width - mur_1_width
     mur_1_y = 0
-	
-	-- Raquette 1
-	tactos_AddObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height, "none", "Raquette.png")
-	-- Balle 
-	tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle.bmp")
-	-- Mur
-	tactos_AddObject("IMAGE", 3, mur_1_x, mur_1_y, mur_1_width, mur_1_height, "none", "Raquette2.png")	
+	tactos_AddObject("IMAGE", 3, mur_1_x, mur_1_y, mur_1_width, mur_1_height, "none", "Raquette2.png")		
+
 	-- Score
 	tactos_AddObject("TEXT", 10, 0, 50, screen_width, 250, "none", "CONFIG:50,CT:black,T:navy:CenterTop")
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
+	
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
 	
@@ -64,9 +95,11 @@ onInit = function(n, ...)
 	affiche_score = "Vous avez fait : "
 	
 	-- Sons
-	tactos_AddObject("SOUND", 100, -1, -1, 1, 1, "none", "filename:raquette.wav")
-	tactos_AddObject("SOUND", 101, -1, -1, 1, 1, "none", "filename:mur.wav")
-	tactos_AddObject("SOUND", 102, -1, -1, 1, 1, "none", "screenreader:0")
+	if play_sound == true then
+		tactos_AddObject("SOUND", 100, -1, -1, 1, 1, "none", "filename:raquette.wav")
+		tactos_AddObject("SOUND", 101, -1, -1, 1, 1, "none", "filename:mur.wav")
+		tactos_AddObject("SOUND", 102, -1, -1, 1, 1, "none", "screenreader:0")
+	end
 
 	
 	-- lancer balle
@@ -138,7 +171,11 @@ function update_state()
 	if (ball_x + ball_width) >= (screen_width - mur_1_width) then
 		ball_angle = (math.pi - ball_angle) % (2 * math.pi)
 		ball_x = screen_width - mur_1_width - ball_width
-		tactos_PlaySound(101)
+		
+		if play_sound == true then
+			tactos_PlaySound(101)
+		end
+		
 	end
 	
 	--rebond sur la raquette
@@ -206,7 +243,11 @@ function rebond_raquette_1()
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
-		tactos_PlaySound(100)
+		
+		if play_sound == true then
+			tactos_PlaySound(100)
+		end
+		
 	end	
 end
 
@@ -220,7 +261,11 @@ function rebond_raquette_2()
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)/2) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
-		tactos_PlaySound(100)
+
+		if play_sound == true then
+			tactos_PlaySound(100)
+		end
+		
 	end	
 end
 
@@ -246,8 +291,13 @@ function draw()
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
 	
 -- affichage score final
-	if lance_balle == false then
+	if lance_balle == false and score_j1 > 0 then
 		tactos_ModifyObject("TEXT",11, affiche_score .. tostring(score_j1))
+		
+		if play_sound == true then
+			tactos_ModifyObject("SOUND", 102, affiche_score .. tostring(score_j1))
+			tactos_PlaySound(102)
+		end
 	end
 	
 -- affichage raquette
