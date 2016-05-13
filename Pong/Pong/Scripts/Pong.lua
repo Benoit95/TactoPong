@@ -21,7 +21,7 @@ onInit = function(n, ...)
     ball_x = (screen_width / 2) - (ball_width / 2)
     ball_y = (screen_height / 2) - (ball_height / 2)
 	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
-	angle_limit = 0.5 -- limite verticale pour l'angle (1 : pas de limite / 0.1 : très limité)
+	angle_limit = 0.3 -- limite verticale pour l'angle (1 : pas de limite / 0.1 : très limité)
 	coeff_v = 12 -- coef vitesse de la balle
 	
 	-- Raquette 1
@@ -62,6 +62,12 @@ onInit = function(n, ...)
 	-- score
 	score_j1 = 0
 	affiche_score = "Vous avez fait : "
+	
+	-- Sons
+	tactos_AddObject("SOUND", 100, -1, -1, 1, 1, "none", "filename:raquette.wav")
+	tactos_AddObject("SOUND", 101, -1, -1, 1, 1, "none", "filename:mur.wav")
+	tactos_AddObject("SOUND", 102, -1, -1, 1, 1, "none", "screenreader:0")
+
 	
 	-- lancer balle
 	lance_balle = false
@@ -132,6 +138,7 @@ function update_state()
 	if (ball_x + ball_width) >= (screen_width - mur_1_width) then
 		ball_angle = (math.pi - ball_angle) % (2 * math.pi)
 		ball_x = screen_width - mur_1_width - ball_width
+		tactos_PlaySound(101)
 	end
 	
 	--rebond sur la raquette
@@ -199,6 +206,7 @@ function rebond_raquette_1()
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
+		tactos_PlaySound(100)
 	end	
 end
 
@@ -212,6 +220,7 @@ function rebond_raquette_2()
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)/2) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
+		tactos_PlaySound(100)
 	end	
 end
 
