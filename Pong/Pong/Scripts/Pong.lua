@@ -1,4 +1,4 @@
--- options globales 
+-- options globales
 
 -- jouer les sons
 play_sound = true
@@ -28,7 +28,7 @@ onInit = function(n, ...)
 		ball_x = (screen_width / 2) - (ball_width / 2)
 		ball_y = (screen_height / 2) - (ball_height / 2)
 		tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle.bmp")
-		
+
 	elseif taille_balle == 2 then
 		ball_width = 48
 		ball_height = 48
@@ -42,12 +42,12 @@ onInit = function(n, ...)
 		ball_y = (screen_height / 2) - (ball_height / 2)
 		tactos_AddObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height, "none", "Balle3.bmp")
 	end
-	
-	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
+
+  	ball_angle = math.pi -- angle en radians (/!\ : doit toujours etre entre 0 et 2*pi)
 	angle_limit = 0.3 -- limite verticale pour l'angle (1 : pas de limite / 0.1 : très limité)
 	coeff_v = 12 -- coef vitesse de la balle
 
-	
+
 	-- Raquette 1
 	paddle_1_width = 30
 	paddle_1_x = 0
@@ -64,21 +64,21 @@ onInit = function(n, ...)
 		paddle_1_y = (screen_height / 2) - (paddle_1_height / 2)
 		tactos_AddObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height, "none", "Raquette1_3.png")
 	end
-	
+
 	-- Mur
     mur_1_width = 30
     mur_1_height = screen_height
     mur_1_x = screen_width - mur_1_width
     mur_1_y = 0
-	tactos_AddObject("IMAGE", 3, mur_1_x, mur_1_y, mur_1_width, mur_1_height, "none", "Raquette2.png")		
+	tactos_AddObject("IMAGE", 3, mur_1_x, mur_1_y, mur_1_width, mur_1_height, "none", "Raquette2.png")
 
 	-- Score
 	tactos_AddObject("TEXT", 10, 0, 50, screen_width, 250, "none", "CONFIG:50,CT:black,T:navy:CenterTop")
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
-	
+
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
-	
+
 	-- Coordonées du picot à lever
 	m_picots = {} -- création de la matrice de picots
 	for i = 1, 4 do
@@ -89,11 +89,11 @@ onInit = function(n, ...)
 	end
 	changeStim = true
 	en_face = false
-	
+
 	-- score
 	score_j1 = 0
 	affiche_score = "Vous avez fait : "
-	
+
 	-- Sons
 	if play_sound == true then
 		tactos_AddObject("SOUND", 100, -1, -1, 1, 1, "none", "filename:raquette.wav")
@@ -101,14 +101,14 @@ onInit = function(n, ...)
 		tactos_AddObject("SOUND", 102, -1, -1, 1, 1, "none", "screenreader:0")
 	end
 
-	
+
 	-- lancer balle
 	lance_balle = false
-	
+
 	tactos_Redraw()
-	
+
 	tactos_SetTimerValue(20)
-	
+
 	return 20 	-- Timer
 end
 
@@ -121,15 +121,16 @@ onKey = function (cmd, ch)
 	if cmd == 0x0102 then
 		if ch == 32 then	-- SPACE (lance la balle)
 			lance_balle = true
-			
+
 			-- Remise à 0 du score
 			score_j1 = 0
+      coeff_v = 12
 			tactos_ModifyObject("TEXT",10, tostring(score_j1))
 			tactos_ModifyObject("TEXT",11, "")
 		end
 	end
 end
- 
+
 
 function update_state()
 -- update de la position de la raquette
@@ -140,52 +141,52 @@ function update_state()
 	elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
 		paddle_1_y = screen_height - paddle_1_height
 	end
-	
+
 -- update de la position de la balle
 	if lance_balle == true then
 		ball_x = ball_x + (math.cos(ball_angle) * coeff_v)
 		ball_y = ball_y - (math.sin(ball_angle) * coeff_v)
 	end
-	
+
 -- update du tableau des picots
 	if use_ball_width == true then
 		update_picots_width()
 	else
 		update_picots_no_width()
 	end
-	
+
 -- rebonds de la balle
 	--rebond haut
 	if ball_y <= 0 then
 		ball_angle = (-1 * ball_angle) % (2 * math.pi)
 		ball_y = 0
 	end
-	
+
 	--rebond bas
 	if (ball_y + ball_height) >= screen_height then
 		ball_angle = (-1 * ball_angle) % (2 * math.pi)
 		ball_y = screen_height - ball_height
 	end
-	
+
 	-- rebond sur le mur
 	if (ball_x + ball_width) >= (screen_width - mur_1_width) then
 		ball_angle = (math.pi - ball_angle) % (2 * math.pi)
 		ball_x = screen_width - mur_1_width - ball_width
-		
+
 		if play_sound == true then
 			tactos_PlaySound(101)
 		end
-		
+
 	end
-	
+
 	--rebond sur la raquette
 	if type_rebond == 1 then
 		rebond_raquette_1()
 	else
 		rebond_raquette_2()
 	end
-	
--- Sortie de la balle 
+
+-- Sortie de la balle
     if ball_x < 0 then
 		lance_balle = false
 		init_ball_pos()
@@ -239,16 +240,17 @@ function rebond_raquette_1()
 		Y = ball_y - paddle_1_y + ball_height
 		H = paddle_1_height + ball_height
 		Z = angle_limit*math.pi/2
-		
+    coeff_v = coeff_v + 0.2
+
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
-		
+
 		if play_sound == true then
 			tactos_PlaySound(100)
 		end
-		
-	end	
+
+	end
 end
 
 -- prise en compte de l'angle d'arrivée
@@ -257,7 +259,7 @@ function rebond_raquette_2()
 		Y = ball_y - paddle_1_y + ball_height
 		H = paddle_1_height + ball_height
 		Z = ((2 + angle_limit)*math.pi - 2*ball_angle) / 4
-		
+
 		ball_angle = (((Y/H) * (-angle_limit*math.pi)/2) + Z) % (2 * math.pi)
 		ball_x = (paddle_1_x + paddle_1_width + 1)
 		score_j1 = score_j1 + 1
@@ -265,8 +267,8 @@ function rebond_raquette_2()
 		if play_sound == true then
 			tactos_PlaySound(100)
 		end
-		
-	end	
+
+	end
 end
 
 function init_ball_pos()
@@ -274,7 +276,7 @@ function init_ball_pos()
     ball_y = (screen_height / 2) - (ball_height / 2)
 	ball_angle = math.pi
 end
- 
+
 function getStimString()
 	local str = ""
 	for i = 1, 4 do
@@ -289,27 +291,26 @@ end
 function draw()
 -- affichage score
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
-	
+
 -- affichage score final
 	if lance_balle == false and score_j1 > 0 then
 		tactos_ModifyObject("TEXT",11, affiche_score .. tostring(score_j1))
-		
+
 		if play_sound == true then
 			tactos_ModifyObject("SOUND", 102, affiche_score .. tostring(score_j1))
 			tactos_PlaySound(102)
 		end
 	end
-	
+
 -- affichage raquette
 	tactos_SetPosObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height)
-	
--- affichage balle	
+
+-- affichage balle
 	tactos_SetPosObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height)
-	
+
 -- picots
 	if (changeStim == true) then
 		tactos_SetStim(3, getStimString())
 		changeStim = false
 	end
 end
-
