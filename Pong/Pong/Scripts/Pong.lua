@@ -134,7 +134,7 @@ end
 function update_state()
 -- update de la position de la raquette
 	x,y = tactos_GetTactosPos()
-	paddle_1_y = y - (paddle_1_height / 2)
+	paddle_1_y = screen_height - y - (paddle_1_height / 2)
 	if paddle_1_y <= 0 then -- haut de l'écran
 		paddle_1_y = 0
 	elseif (paddle_1_y + paddle_1_height) >= screen_height then -- bas de l'écran
