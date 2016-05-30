@@ -76,6 +76,18 @@ onInit = function(n, ...)
 	tactos_AddObject("TEXT", 10, 0, 50, screen_width, 250, "none", "CONFIG:50,CT:black,T:navy:CenterTop")
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
 
+	name_file = "../data/Profil/_Cookies/_Pong_High_Score_.txt"
+	file = io.open(name_file, "r")
+	if file~=nil then 
+		high_score = file:read("*number")
+		file:close()
+	else 
+		high_score = 0
+	end
+
+	tactos_AddObject("TEXT", 102, 0, 50, screen_width, 250, "none", "CONFIG:20:white:red:")
+	tactos_ModifyObject("TEXT", 102, "Meilleure score : " .. high_score);
+
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
 
@@ -295,6 +307,14 @@ function draw()
 -- affichage score final
 	if lance_balle == false and score_j1 > 0 then
 		tactos_ModifyObject("TEXT",11, affiche_score .. tostring(score_j1))
+		
+		if(score_j1 > high_score) then
+			high_score = score_j1
+			file = io.open(name_file, "w+")
+			file:write(tostring(high_score), " ")
+			file:write("\n")
+			file:close()
+		end
 
 		if play_sound == true then
 			tactos_ModifyObject("SOUND", 102, affiche_score .. tostring(score_j1))
@@ -312,5 +332,15 @@ function draw()
 	if (changeStim == true) then
 		tactos_SetStim(3, getStimString())
 		changeStim = false
+	end
+end
+
+function file_exists(name)
+	local f=io.open(name,"r")
+	if f~=nil then 
+		io.close(f) 
+		return true 
+	else 
+		return false 
 	end
 end
