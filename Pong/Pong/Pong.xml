@@ -10,8 +10,8 @@
 <response>
 	<room>
 		<name>Pong</name>
-		<width>1024</width>
-		<height>768</height>
+		<width>800</width>
+		<height>900</height>
 		<scriptLUA>Pong.lua</scriptLUA>
 	</room>
 
