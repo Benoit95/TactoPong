@@ -310,6 +310,7 @@ function draw()
 
 		if(score_j1 > high_score) then
 			high_score = score_j1
+			tactos_ModifyObject("TEXT", 102, "Meilleure score : " .. high_score);
 			file = io.open(name_file, "w+")
 			file:write(tostring(high_score), " ")
 			file:write("\n")
@@ -332,15 +333,5 @@ function draw()
 	if (changeStim == true) then
 		tactos_SetStim(3, getStimString())
 		changeStim = false
-	end
-end
-
-function file_exists(name)
-	local f=io.open(name,"r")
-	if f~=nil then 
-		io.close(f) 
-		return true 
-	else 
-		return false 
 	end
 end
