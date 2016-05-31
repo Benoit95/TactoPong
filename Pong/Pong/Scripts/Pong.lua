@@ -22,6 +22,7 @@ onInit = function(n, ...)
     screen_height = 900
 
 	-- ball
+
 	if taille_balle == 1 then
 		ball_width = 32
 		ball_height = 32
@@ -74,19 +75,19 @@ onInit = function(n, ...)
 
 	name_file = "../data/Profil/_Cookies/_Pong_High_Score_.txt"
 	file = io.open(name_file, "r")
-	if file~=nil then 
+	if file~=nil then
 		high_score = file:read("*number")
 		file:close()
-	else 
+	else
 		high_score = 0
 	end
 
 	tactos_AddObject("TEXT", 102, 0, 50, screen_width, 250, "none", "CONFIG:20:white:red:")
 	tactos_ModifyObject("TEXT", 102, "Meilleure score : " .. high_score);
-	
+
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
-		
+
 	-- Coordonées du picot à lever
 	m_picots = {} -- création de la matrice de picots
 	for i = 1, 4 do
@@ -269,7 +270,7 @@ function rebond_raquette_2()
 		local med = (5*math.pi - 2*ball_angle) / 4
 		X = ball_x - paddle_1_x + ball_width
 		W = paddle_1_width + ball_width
-		
+
 		ball_angle = ((X/W) * (-e) + med + (e/2)) % (2 * math.pi)
 		ball_y = (screen_height - paddle_1_height - ball_height - 1)
 		score_j1 = score_j1 + 1
@@ -316,7 +317,7 @@ function draw()
 			file:write("\n")
 			file:close()
 		end
-		
+
 		if play_sound == true then
 			tactos_ModifyObject("SOUND", 102, affiche_score .. tostring(score_j1))
 			tactos_PlaySound(102)
@@ -333,5 +334,15 @@ function draw()
 	if (changeStim == true) then
 		tactos_SetStim(3, getStimString())
 		changeStim = false
+	end
+end
+
+function file_exists(name)
+	local f=io.open(name,"r")
+	if f~=nil then
+		io.close(f)
+		return true
+	else
+		return false
 	end
 end
