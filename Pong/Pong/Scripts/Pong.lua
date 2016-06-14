@@ -16,13 +16,15 @@ taille_balle = 1
 -- Taille de la raquette (1 2 ou 3 du plus petit au plus grand)	-- Normal : 1
 taille_raquette = 1
 
+
+--****** Initialisation ******
 onInit = function(n, ...)
 	-- Ecran
     screen_width = 800
     screen_height = 900
-
+	display = "on"
+	
 	-- ball
-
 	if taille_balle == 1 then
 		ball_width = 32
 		ball_height = 32
@@ -68,7 +70,7 @@ onInit = function(n, ...)
     mur_1_x = 0
     mur_1_y = 0
 	tactos_AddObject("IMAGE", 3, mur_1_x, mur_1_y, mur_1_width, mur_1_height, "none", "mur.png")
-
+	
 	-- Score
 	tactos_AddObject("TEXT", 10, 0, 50, screen_width, 250, "none", "CONFIG:50,CT:black,T:navy:CenterTop")
 	tactos_ModifyObject("TEXT",10, tostring(score_j1))
@@ -82,8 +84,9 @@ onInit = function(n, ...)
 		high_score = 0
 	end
 
-	tactos_AddObject("TEXT", 102, 0, 50, screen_width, 250, "none", "CONFIG:20:white:red:")
-	tactos_ModifyObject("TEXT", 102, "Meilleure score : " .. high_score);
+	-- Meilleur score
+	tactos_AddObject("TEXT", 12, 0, 50, screen_width, 250, "none", "CONFIG:20:white:red:")
+	tactos_ModifyObject("TEXT", 12, "Meilleur score : " .. high_score);
 
 	-- Message a la fin de la game
 	tactos_AddObject("TEXT", 11, 0, screen_height*0.8, screen_width, 25, "none", "CONFIG:20,CT:black,T:navy: ")
@@ -105,9 +108,9 @@ onInit = function(n, ...)
 
 	-- Sons
 	if play_sound == true then
-		tactos_AddObject("SOUND", 100, -1, -1, 1, 1, "none", "filename:raquette.wav")
-		tactos_AddObject("SOUND", 101, -1, -1, 1, 1, "none", "filename:mur.wav")
-		tactos_AddObject("SOUND", 102, -1, -1, 1, 1, "none", "screenreader:0")
+		tactos_AddObject("SOUND", 200, -1, -1, 1, 1, "none", "filename:raquette.wav")
+		tactos_AddObject("SOUND", 201, -1, -1, 1, 1, "none", "filename:mur.wav")
+		tactos_AddObject("SOUND", 202, -1, -1, 1, 1, "none", "screenreader:0")
 	end
 
 
@@ -121,25 +124,12 @@ onInit = function(n, ...)
 	return 20 	-- Timer
 end
 
+
+--****** Moteur ******
 onTimer = function ()
 	update_state()
 	draw()
 end
-
-onKey = function (cmd, ch)
-	if cmd == 0x0102 then
-		if ch == 32 and lance_balle == false then	-- SPACE (lance la balle)
-			lance_balle = true
-
-			-- Remise à 0 du score
-			score_j1 = 0
-			coeff_v = 8
-			tactos_ModifyObject("TEXT",10, tostring(score_j1))
-			tactos_ModifyObject("TEXT",11, "")
-		end
-	end
-end
-
 
 function update_state()
 -- update de la position de la raquette
@@ -184,7 +174,7 @@ function update_state()
 
 		--on joue le son du rebond
 		if play_sound == true then
-			tactos_PlaySound(101)
+			tactos_PlaySound(201)
 		end
 	end
 
@@ -197,11 +187,113 @@ function update_state()
 
 -- Sortie de la balle
     if (ball_y + ball_height) > screen_height then
-		lance_balle = false
-		init_ball_pos()
+		gameover()
     end
 end
 
+function draw()
+--affichage graphique
+	-- affichage score
+	tactos_ModifyObject("TEXT",10, tostring(score_j1))
+
+	-- affichage score final
+	if lance_balle == false and score_j1 > 0 then
+		tactos_ModifyObject("TEXT",11, affiche_score .. tostring(score_j1))
+		tactos_ModifyObject("TEXT", 12, "Meilleur score : " .. high_score);
+	end
+
+	-- affichage raquette
+	tactos_SetPosObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height)
+
+	-- affichage balle
+	if display == "on" then
+		tactos_SetPosObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height)
+	elseif display == "switch-off" then
+		tactos_SetPosObject("IMAGE", 2, screen_width, 0, ball_width, ball_height)
+		display = "off"
+	end
+	
+-- déclenchement des picots
+	if (changeStim == true) then
+		tactos_SetStim(3, getStimString())
+		changeStim = false
+	end
+end
+
+
+--****** Appuis clavier ******
+onKey = function (cmd, ch)
+	if cmd == 0x0102 then
+		if ch == 32 and lance_balle == false then -- SPACE (lance la balle)
+			lance_balle = true
+			-- Remise à 0 du score
+			score_j1 = 0
+			coeff_v = 8
+			tactos_ModifyObject("TEXT",10, tostring(score_j1))
+			tactos_ModifyObject("TEXT",11, "")
+		elseif ch == 100 then -- D (display)
+			if display == "on" then
+				display = "switch-off"
+			else
+				display = "on"
+			end
+		end
+	end
+end
+
+
+--****** Fonctions de service ******
+-- initialisation de la position de la balle
+function init_ball_pos()
+	ball_x = (screen_width / 2) - (ball_width / 2)
+    ball_y = (screen_height / 2) - (ball_height / 2)
+	ball_angle = (3 * math.pi) / 2
+end
+
+-- récupération d'une chaine de caractères correspondant aux picots à lever (du type "0000000100000000")
+function getStimString()
+	local str = ""
+	for i = 1, 4 do
+		for j = 1, 4 do
+			str = str .. m_picots[i][j]
+		end
+	end
+	return str
+end
+
+function file_exists(name)
+	local f=io.open(name,"r")
+	if f~=nil then
+		io.close(f)
+		return true
+	else
+		return false
+	end
+end
+
+function gameover()
+	lance_balle = false
+	init_ball_pos()
+	
+	-- annonce du score final
+	if play_sound == true then
+		tactos_ModifyObject("SOUND", 202, "screenreader:" .. affiche_score .. " " .. tostring(score_j1))
+		tactos_PlaySound(202)
+	end
+	
+	-- MAJ du highscore
+	if(score_j1 > high_score) then
+		high_score = score_j1
+		file = io.open(name_file, "w+")
+		file:write(tostring(high_score), " ")
+		file:write("\n")
+		file:close()
+	end
+end
+
+
+--****** Fonctions de calcul de l'état des picots ******
+-- plusieurs picots peuvent être levés simultanément (prise en compte de la largeur réelle de la balle)
 function update_picots_width()
 	local ligne = math.ceil(ball_y / (screen_height / 4)) -- la ligne à modifier (=profondeur de la balle)
 	en_face = false
@@ -223,6 +315,7 @@ function update_picots_width()
 	end
 end
 
+-- pas de prise en compte de la largeur de la balle : il ne peut y avoir qu'un seul picot levé à chaque fois, quelle que soit la largeur réelle de la balle
 function update_picots_no_width()
 	local ligne = math.ceil(ball_y / (screen_height / 4)) -- la ligne à modifier (=profondeur de la balle)
 	local r = math.ceil((ball_x - paddle_1_x + ball_width) / ((ball_width + paddle_1_width) / 4)) -- colonne à modifier (=position balle par rapport à la raquette)
@@ -243,20 +336,23 @@ function update_picots_no_width()
 	end
 end
 
+--****** Fonctions de calcul du rebond sur la raquette ******
 -- pas de prise en compte de l'angle d'arrivée
 function rebond_raquette_1()
-	if (ball_y + ball_height) >= (screen_height - paddle_1_height) and en_face == true then
+	if (ball_y + ball_height) >= (screen_height - paddle_1_height) and en_face == true then -- condition de collision sur la raquette
+		-- variables locales (cf trigonométrie)
 		local e = angle_limit*math.pi/2
 		X = ball_x - paddle_1_x + ball_width
 		W = paddle_1_width + ball_width
 
+		-- mise à jour de l'angle de la balle et du score
 		ball_angle = ((X/W) * (-e*2) + math.pi/2 + e) % (2 * math.pi)
-		ball_y = (screen_height - paddle_1_height - ball_height - 1)
+		ball_y = (screen_height - paddle_1_height - ball_height - 1) -- pour éviter les bugs de collision, on replace la balle au dessus de la raquette
 		score_j1 = score_j1 + 1
 
 		-- on joue le son du rebond
 		if play_sound == true then
-			tactos_PlaySound(100)
+			tactos_PlaySound(200)
 		end
 		-- la vitesse de la balle augmente à chaque rebond sur la raquette
 		coeff_v = coeff_v + 0.2
@@ -265,84 +361,27 @@ end
 
 -- prise en compte de l'angle d'arrivée
 function rebond_raquette_2()
-	if (ball_y + ball_height) >= (screen_height - paddle_1_height) and en_face == true then
+	if (ball_y + ball_height) >= (screen_height - paddle_1_height) and en_face == true then -- condition de collision sur la raquette
+		-- variables locales (cf trigonométrie)
 		local e = angle_limit*math.pi/2
 		local med = (5*math.pi - 2*ball_angle) / 4
 		X = ball_x - paddle_1_x + ball_width
 		W = paddle_1_width + ball_width
 
+		-- mise à jour de l'angle de la balle et du score
 		ball_angle = ((X/W) * (-e) + med + (e/2)) % (2 * math.pi)
-		ball_y = (screen_height - paddle_1_height - ball_height - 1)
+		ball_y = (screen_height - paddle_1_height - ball_height - 1) -- pour éviter les bugs de collision, on replace la balle au dessus de la raquette
 		score_j1 = score_j1 + 1
 
 		-- on joue le son du rebond
 		if play_sound == true then
-			tactos_PlaySound(100)
+			tactos_PlaySound(200)
 		end
 		-- la vitesse de la balle augmente à chaque rebond sur la raquette
 		coeff_v = coeff_v + 0.2
 	end
 end
 
-function init_ball_pos()
-	ball_x = (screen_width / 2) - (ball_width / 2)
-    ball_y = (screen_height / 2) - (ball_height / 2)
-	ball_angle = (3 * math.pi) / 2
-end
 
-function getStimString()
-	local str = ""
-	for i = 1, 4 do
-		for j = 1, 4 do
-			str = str .. m_picots[i][j]
-		end
-	end
-	tactos_Debug(str)
-	return str
-end
 
-function draw()
--- affichage score
-	tactos_ModifyObject("TEXT",10, tostring(score_j1))
 
--- affichage score final
-	if lance_balle == false and score_j1 > 0 then
-		tactos_ModifyObject("TEXT",11, affiche_score .. tostring(score_j1))
-
-		if(score_j1 > high_score) then
-			high_score = score_j1
-			tactos_ModifyObject("TEXT", 102, "Meilleure score : " .. high_score);
-			file = io.open(name_file, "w+")
-			file:write(tostring(high_score), " ")
-			file:write("\n")
-			file:close()
-		end
-
-		if play_sound == true then
-			tactos_ModifyObject("SOUND", 102, affiche_score .. tostring(score_j1))
-			tactos_PlaySound(102)
-		end
-	end
-
--- affichage raquette
-	tactos_SetPosObject("IMAGE", 1, paddle_1_x, paddle_1_y, paddle_1_width, paddle_1_height)
-
--- affichage balle
-	tactos_SetPosObject("IMAGE", 2, ball_x, ball_y, ball_width, ball_height)
-
--- picots
-	if (changeStim == true) then
-		tactos_SetStim(3, getStimString())
-		changeStim = false
-	end
-end
-
-function file_exists(name)
-	local f=io.open(name,"r")
-	if f~=nil then
-		io.close(f)
-		return true
-	else
-		return false
-	end
-end
