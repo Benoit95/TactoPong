@@ -1,0 +1,1 @@
+TactoPong est un jeu de Pong utilisant la plate-forme Tactos, permettant à des personnes malvoyantes ou non-voyantes d'y jouer.
